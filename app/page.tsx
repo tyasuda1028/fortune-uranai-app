@@ -66,9 +66,8 @@ export default function Home() {
     name: '',
     birthdate: '',
     bloodType: 'A',
-    rokuseiStar: '木星人（＋）',
+    rokuseiStar: '木星人（−）',
     isReigoSeijin: false,
-    isHSP: false,
     question: '',
     fortuneDate: getTodayString(),
   })

@@ -16,7 +16,6 @@ export interface FortuneFormData {
   bloodType: BloodType
   rokuseiStar: RokuseiStar
   isReigoSeijin: boolean
-  isHSP: boolean
   question: string
   fortuneDate: string       // YYYY-MM-DD
 }
@@ -37,7 +36,6 @@ export interface FortuneResult {
   lucky_color_hex: string
   todays_word: string
   advice: string
-  hsp_advice?: string
   fortune_details: {
     rokusei: string
     zodiac: string

@@ -157,20 +157,6 @@ export default function FortuneForm({ initialData, onSubmit, isLoading }: Fortun
             霊合星人です（節分前後生まれ）
           </label>
         </div>
-
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            id="hsp"
-            className="fortune-checkbox"
-            checked={data.isHSP}
-            onChange={(e) => set('isHSP', e.target.checked)}
-          />
-          <label htmlFor="hsp" className="text-sm text-slate-300 cursor-pointer">
-            HSS型HSPです
-            <span className="text-xs text-slate-500 ml-1">（繊細かつ刺激を求めるタイプ）</span>
-          </label>
-        </div>
       </div>
 
       {/* Question & Date */}

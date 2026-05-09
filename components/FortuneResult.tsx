@@ -135,13 +135,6 @@ export default function FortuneResult({ result, name, fortuneDate, onReset }: Fo
       >
         <p className="text-xs text-purple-300 font-medium mb-3">💡 今日のアドバイス</p>
         <p className="text-sm text-slate-300 leading-relaxed">{result.advice}</p>
-        {result.hsp_advice && (
-          <>
-            <div className="mystic-divider" />
-            <p className="text-xs text-indigo-300 font-medium mb-2">🌸 HSS型HSPの方へ</p>
-            <p className="text-sm text-slate-300 leading-relaxed">{result.hsp_advice}</p>
-          </>
-        )}
       </div>
 
       {/* Today's Word */}
@@ -163,7 +156,10 @@ export default function FortuneResult({ result, name, fortuneDate, onReset }: Fo
           className="w-full p-5 flex items-center justify-between text-left"
         >
           <span className="text-sm font-semibold text-purple-300">✦ 占術別詳細</span>
-          <span className="text-slate-500 text-lg transition-transform" style={{ transform: showDetails ? 'rotate(180deg)' : 'none' }}>
+          <span
+            className="text-slate-500 text-lg transition-transform duration-200"
+            style={{ transform: showDetails ? 'rotate(180deg)' : 'none' }}
+          >
             ▾
           </span>
         </button>
@@ -182,10 +178,7 @@ export default function FortuneResult({ result, name, fortuneDate, onReset }: Fo
 
       {/* Reset Button */}
       <div className="text-center pt-2 pb-8">
-        <button
-          onClick={onReset}
-          className="btn-primary"
-        >
+        <button onClick={onReset} className="btn-primary">
           <span className="flex items-center gap-2">
             <span>🔮</span>
             <span>もう一度占う</span>

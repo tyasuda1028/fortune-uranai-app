@@ -5,7 +5,7 @@ import FortuneForm from '@/components/FortuneForm'
 import FortuneResult from '@/components/FortuneResult'
 import LoadingView from '@/components/LoadingView'
 import { FortuneFormData, FortuneResult as FortuneResultType } from '@/lib/types'
-import { calcRokuseiStar, getTodayString } from '@/lib/calculations'
+import { getTodayString } from '@/lib/calculations'
 
 type Step = 'form' | 'loading' | 'result'
 
@@ -66,22 +66,12 @@ export default function Home() {
     name: '',
     birthdate: '',
     bloodType: 'A',
-    rokuseiStar: '木星人（−）',
+    rokuseiStar: '',
     isReigoSeijin: false,
     question: '',
     fortuneDate: getTodayString(),
     fortunePeriod: 'day',
   })
-
-  // Set initial rokusei star when birthdate changes (via page load)
-  useEffect(() => {
-    if (formData.birthdate) {
-      setFormData((prev) => ({
-        ...prev,
-        rokuseiStar: calcRokuseiStar(prev.birthdate),
-      }))
-    }
-  }, [formData.birthdate]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (data: FortuneFormData) => {
     setFormData(data)

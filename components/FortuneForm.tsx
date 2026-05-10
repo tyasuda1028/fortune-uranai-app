@@ -29,12 +29,11 @@ const PERIOD_OPTIONS: { value: FortunePeriod; label: string; icon: string }[] = 
 export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps) {
   const [data, setData] = useState<FortuneFormData>(initialData)
   const [zodiac, setZodiac] = useState('')
-  const [autoStar, setAutoStar] = useState('')
 
   useEffect(() => {
     if (data.birthdate) {
       setZodiac(getZodiacSign(data.birthdate))
-      setAutoStar(calcRokuseiStar(data.birthdate))
+      setData((prev) => ({ ...prev, rokuseiStar: calcRokuseiStar(data.birthdate) }))
     }
   }, [data.birthdate])
 
@@ -148,27 +147,19 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
         </h2>
 
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-xs text-slate-400 font-medium">
-              六星占術の星 <span className="text-rose-400">*</span>
-            </label>
-            {autoStar && (
-              <button
-                type="button"
-                onClick={() => set('rokuseiStar', autoStar as RokuseiStar)}
-                className="text-xs text-purple-400 hover:text-purple-300 transition-colors underline underline-offset-2"
-              >
-                自動計算: {autoStar}
-              </button>
+          <label className="block text-xs text-slate-400 mb-1.5 font-medium">
+            六星占術の星 <span className="text-rose-400">*</span>
+            {data.birthdate && (
+              <span className="ml-2 text-purple-400 font-normal">（生年月日から自動設定）</span>
             )}
-          </div>
+          </label>
           <select
             className="fortune-input fortune-select"
             value={data.rokuseiStar}
             onChange={(e) => set('rokuseiStar', e.target.value as RokuseiStar)}
             required
           >
-            <option value="" disabled>選択してください</option>
+            <option value="" disabled>生年月日を入力すると自動設定されます</option>
             {ROKUSEI_STARS.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
@@ -203,7 +194,6 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
             type="date"
             className="fortune-input fortune-select"
             value={data.fortuneDate.length === 10 ? data.fortuneDate : getTodayString()}
-            max={getTodayString()}
             onChange={(e) => set('fortuneDate', e.target.value)}
             required
           />

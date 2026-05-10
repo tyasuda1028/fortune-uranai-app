@@ -192,7 +192,6 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
             <FortuneDetailRow icon="📈" label="バイオリズム" text={result.fortune_details.biorhythm} />
             <FortuneDetailRow icon="🀄" label="四柱推命" text={result.fortune_details.shichusuimei} />
             <FortuneDetailRow icon="🩸" label="血液型占い" text={result.fortune_details.blood_type} />
-            <FortuneDetailRow icon="🧬" label="血液型・性格傾向" text={result.fortune_details.blood_personality} />
           </div>
         )}
       </div>

@@ -14,7 +14,7 @@ export interface FortuneFormData {
   name: string
   birthdate: string
   bloodType: BloodType
-  rokuseiStar: RokuseiStar
+  rokuseiStar: RokuseiStar | ''
   isReigoSeijin: boolean
   question: string
   fortuneDate: string      // YYYY-MM-DD
@@ -44,6 +44,5 @@ export interface FortuneResult {
     biorhythm: string
     blood_type: string
     shichusuimei: string
-    blood_personality: string
   }
 }

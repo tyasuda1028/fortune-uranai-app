@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { FortuneFormData, BloodType, RokuseiStar, FortunePeriod } from '@/lib/types'
-import { calcRokuseiStar, getZodiacSign, getTodayString, getTodayMonthString } from '@/lib/calculations'
+import { calcRokuseiStar, getZodiacSign, getTodayString } from '@/lib/calculations'
 
 interface FortuneFormProps {
   initialData: FortuneFormData
@@ -43,11 +43,8 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
 
   const handlePeriodChange = (period: FortunePeriod) => {
     set('fortunePeriod', period)
-    // 月運に切り替えたらmonth形式に、それ以外はday形式に
-    if (period === 'month') {
-      set('fortuneDate', getTodayMonthString())
-    } else if (data.fortuneDate.length === 7) {
-      // month形式(YYYY-MM)からday形式に戻す
+    // 常に YYYY-MM-DD 形式 — 期間は開始日から算出
+    if (data.fortuneDate.length !== 10) {
       set('fortuneDate', getTodayString())
     }
   }
@@ -200,25 +197,35 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
 
         <div>
           <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-            {data.fortunePeriod === 'month' ? '占いたい月' : '占いたい日付'}{' '}
-            <span className="text-rose-400">*</span>
+            占い開始日 <span className="text-rose-400">*</span>
           </label>
-          {data.fortunePeriod === 'month' ? (
-            <input
-              type="month"
-              className="fortune-input fortune-select"
-              value={data.fortuneDate.length === 7 ? data.fortuneDate : data.fortuneDate.slice(0, 7)}
-              onChange={(e) => set('fortuneDate', e.target.value)}
-              required
-            />
-          ) : (
-            <input
-              type="date"
-              className="fortune-input fortune-select"
-              value={data.fortuneDate.length === 10 ? data.fortuneDate : getTodayString()}
-              onChange={(e) => set('fortuneDate', e.target.value)}
-              required
-            />
+          <input
+            type="date"
+            className="fortune-input fortune-select"
+            value={data.fortuneDate.length === 10 ? data.fortuneDate : getTodayString()}
+            max={getTodayString()}
+            onChange={(e) => set('fortuneDate', e.target.value)}
+            required
+          />
+          {data.fortunePeriod === 'week' && data.fortuneDate.length === 10 && (
+            <p className="mt-1.5 text-xs text-purple-300">
+              期間: <span className="font-semibold">
+                {data.fortuneDate} 〜 {(() => {
+                  const d = new Date(data.fortuneDate); d.setDate(d.getDate() + 6)
+                  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+                })()}
+              </span>（7日間）
+            </p>
+          )}
+          {data.fortunePeriod === 'month' && data.fortuneDate.length === 10 && (
+            <p className="mt-1.5 text-xs text-purple-300">
+              期間: <span className="font-semibold">
+                {data.fortuneDate} 〜 {(() => {
+                  const d = new Date(data.fortuneDate); d.setMonth(d.getMonth() + 1)
+                  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+                })()}
+              </span>（1ヶ月）
+            </p>
           )}
         </div>
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { FortuneResult, Rating, FortunePeriod } from '@/lib/types'
-import { formatDateJP, formatMonthJP, getWeekRange } from '@/lib/calculations'
+import { formatDateJP, getWeekRange, getMonthRange } from '@/lib/calculations'
 
 interface FortuneResultProps {
   result: FortuneResult
@@ -75,10 +75,10 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
   const periodBadge = fortunePeriod === 'week' ? '週運' : fortunePeriod === 'month' ? '月運' : '日運'
   const periodIcon  = fortunePeriod === 'week' ? '📅' : fortunePeriod === 'month' ? '🌙' : '☀️'
   const dateLabel =
-    fortunePeriod === 'month'
-      ? formatMonthJP(fortuneDate)
-      : fortunePeriod === 'week'
-      ? getWeekRange(fortuneDate).label
+    fortunePeriod === 'week'
+      ? `${getWeekRange(fortuneDate).label}（7日間）`
+      : fortunePeriod === 'month'
+      ? `${getMonthRange(fortuneDate).label}（1ヶ月）`
       : formatDateJP(fortuneDate)
 
   const categories: FortuneCategoryCardProps[] = [

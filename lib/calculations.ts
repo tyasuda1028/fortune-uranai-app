@@ -134,26 +134,43 @@ export function calcAge(birthdate: string, referenceDate: string): number {
   return age
 }
 
-// ── 週の範囲（月〜日） ────────────────────────────
+// ── 週の範囲（指定日から7日間） ──────────────────
 export function getWeekRange(dateStr: string): { start: string; end: string; label: string } {
-  const date = new Date(dateStr)
-  const day  = date.getDay()
-  const mon  = new Date(date)
-  mon.setDate(date.getDate() - (day === 0 ? 6 : day - 1))
-  const sun = new Date(mon)
-  sun.setDate(mon.getDate() + 6)
+  const start = new Date(dateStr)
+  const end   = new Date(dateStr)
+  end.setDate(end.getDate() + 6)
 
   const fmt = (d: Date) => {
-    const y = d.getFullYear()
-    const m = d.getMonth() + 1
+    const y  = d.getFullYear()
+    const m  = d.getMonth() + 1
     const dd = d.getDate()
     return `${y}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`
   }
   const fmtJP = (d: Date) => `${d.getMonth()+1}月${d.getDate()}日`
   return {
-    start: fmt(mon),
-    end:   fmt(sun),
-    label: `${fmtJP(mon)}（月）〜${fmtJP(sun)}（日）`,
+    start: fmt(start),
+    end:   fmt(end),
+    label: `${fmtJP(start)}〜${fmtJP(end)}`,
+  }
+}
+
+// ── 月の範囲（指定日から1ヶ月先） ────────────────
+export function getMonthRange(dateStr: string): { start: string; end: string; label: string } {
+  const start = new Date(dateStr)
+  const end   = new Date(dateStr)
+  end.setMonth(end.getMonth() + 1)
+
+  const fmt = (d: Date) => {
+    const y  = d.getFullYear()
+    const m  = d.getMonth() + 1
+    const dd = d.getDate()
+    return `${y}-${String(m).padStart(2,'0')}-${String(dd).padStart(2,'0')}`
+  }
+  const fmtJP = (d: Date) => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`
+  return {
+    start: fmt(start),
+    end:   fmt(end),
+    label: `${fmtJP(start)}〜${fmtJP(end)}`,
   }
 }
 

@@ -7,8 +7,8 @@ import {
   calcAge,
   calcShichuSuimei,
   formatDateJP,
-  formatMonthJP,
   getWeekRange,
+  getMonthRange,
 } from '@/lib/calculations'
 import { FortuneFormData } from '@/lib/types'
 
@@ -90,10 +90,11 @@ export async function POST(request: NextRequest) {
     let periodKind: string
     if (period === 'week') {
       const weekRange = getWeekRange(fortuneDate)
-      periodLabel = `${weekRange.label}の週`
+      periodLabel = `${weekRange.label}（7日間）`
       periodKind = '週運'
     } else if (period === 'month') {
-      periodLabel = formatMonthJP(fortuneDate)
+      const monthRange = getMonthRange(fortuneDate)
+      periodLabel = `${monthRange.label}（1ヶ月）`
       periodKind = '月運'
     } else {
       periodLabel = formatDateJP(fortuneDate)

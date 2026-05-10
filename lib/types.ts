@@ -1,6 +1,6 @@
 export type Rating = '◎' | '◯' | '△' | '×'
-
 export type BloodType = 'A' | 'B' | 'O' | 'AB'
+export type FortunePeriod = 'day' | 'week' | 'month'
 
 export type RokuseiStar =
   | '木星人（＋）' | '木星人（−）'
@@ -12,12 +12,13 @@ export type RokuseiStar =
 
 export interface FortuneFormData {
   name: string
-  birthdate: string         // YYYY-MM-DD
+  birthdate: string
   bloodType: BloodType
   rokuseiStar: RokuseiStar
   isReigoSeijin: boolean
   question: string
-  fortuneDate: string       // YYYY-MM-DD
+  fortuneDate: string      // YYYY-MM-DD
+  fortunePeriod: FortunePeriod
 }
 
 export interface FortuneCategoryResult {
@@ -42,5 +43,7 @@ export interface FortuneResult {
     numerology: string
     biorhythm: string
     blood_type: string
+    shichusuimei: string
+    blood_personality: string
   }
 }

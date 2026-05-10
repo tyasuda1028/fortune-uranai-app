@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import type { FortuneResult, Rating } from '@/lib/types'
-import { formatDateJP } from '@/lib/calculations'
+import type { FortuneResult, Rating, FortunePeriod } from '@/lib/types'
+import { formatDateJP, formatMonthJP, getWeekRange } from '@/lib/calculations'
 
 interface FortuneResultProps {
   result: FortuneResult
   name: string
   fortuneDate: string
+  fortunePeriod?: FortunePeriod
   onReset: () => void
 }
 
@@ -67,8 +68,18 @@ function FortuneDetailRow({ icon, label, text }: FortuneDetailRowProps) {
   )
 }
 
-export default function FortuneResult({ result, name, fortuneDate, onReset }: FortuneResultProps) {
+export default function FortuneResult({ result, name, fortuneDate, fortunePeriod = 'day', onReset }: FortuneResultProps) {
   const [showDetails, setShowDetails] = useState(false)
+
+  // Build period label and badge
+  const periodBadge = fortunePeriod === 'week' ? '週運' : fortunePeriod === 'month' ? '月運' : '日運'
+  const periodIcon  = fortunePeriod === 'week' ? '📅' : fortunePeriod === 'month' ? '🌙' : '☀️'
+  const dateLabel =
+    fortunePeriod === 'month'
+      ? formatMonthJP(fortuneDate)
+      : fortunePeriod === 'week'
+      ? getWeekRange(fortuneDate).label
+      : formatDateJP(fortuneDate)
 
   const categories: FortuneCategoryCardProps[] = [
     { icon: '💼', title: '仕事運', rating: result.work_fortune.rating, description: result.work_fortune.description, delay: 100 },
@@ -81,7 +92,11 @@ export default function FortuneResult({ result, name, fortuneDate, onReset }: Fo
     <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="text-center py-2">
-        <p className="text-xs text-slate-500 mb-1">{formatDateJP(fortuneDate)}</p>
+        <div className="inline-flex items-center gap-1.5 bg-purple-900/40 border border-purple-700/40 rounded-full px-3 py-1 text-xs text-purple-300 font-semibold mb-2">
+          <span>{periodIcon}</span>
+          <span>{periodBadge}</span>
+        </div>
+        <p className="text-xs text-slate-500 mb-1">{dateLabel}</p>
         <h2 className="text-xl font-bold text-white">
           {name}さんの運勢
         </h2>
@@ -133,7 +148,9 @@ export default function FortuneResult({ result, name, fortuneDate, onReset }: Fo
         className="glass-card p-5 animate-slide-up"
         style={{ animationDelay: '550ms', animationFillMode: 'both' }}
       >
-        <p className="text-xs text-purple-300 font-medium mb-3">💡 今日のアドバイス</p>
+        <p className="text-xs text-purple-300 font-medium mb-3">
+          💡 {fortunePeriod === 'week' ? '今週の' : fortunePeriod === 'month' ? '今月の' : '今日の'}アドバイス
+        </p>
         <p className="text-sm text-slate-300 leading-relaxed">{result.advice}</p>
       </div>
 
@@ -142,7 +159,9 @@ export default function FortuneResult({ result, name, fortuneDate, onReset }: Fo
         className="glass-card p-5 animate-slide-up"
         style={{ animationDelay: '600ms', animationFillMode: 'both' }}
       >
-        <p className="text-xs text-purple-300 font-medium mb-3">🔑 今日のひと言</p>
+        <p className="text-xs text-purple-300 font-medium mb-3">
+          🔑 {fortunePeriod === 'week' ? '今週の' : fortunePeriod === 'month' ? '今月の' : '今日の'}ひと言
+        </p>
         <div className="quote-block">{result.todays_word}</div>
       </div>
 
@@ -171,7 +190,9 @@ export default function FortuneResult({ result, name, fortuneDate, onReset }: Fo
             <FortuneDetailRow icon="♈" label="西洋占星術" text={result.fortune_details.zodiac} />
             <FortuneDetailRow icon="🔢" label="数秘術" text={result.fortune_details.numerology} />
             <FortuneDetailRow icon="📈" label="バイオリズム" text={result.fortune_details.biorhythm} />
+            <FortuneDetailRow icon="🀄" label="四柱推命" text={result.fortune_details.shichusuimei} />
             <FortuneDetailRow icon="🩸" label="血液型占い" text={result.fortune_details.blood_type} />
+            <FortuneDetailRow icon="🧬" label="血液型・性格傾向" text={result.fortune_details.blood_personality} />
           </div>
         )}
       </div>

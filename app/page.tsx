@@ -70,6 +70,7 @@ export default function Home() {
     isReigoSeijin: false,
     question: '',
     fortuneDate: getTodayString(),
+    fortunePeriod: 'day',
   })
 
   // Set initial rokusei star when birthdate changes (via page load)
@@ -147,7 +148,6 @@ export default function Home() {
           <FortuneForm
             initialData={formData}
             onSubmit={handleSubmit}
-            isLoading={false}
           />
         )}
         {step === 'loading' && <LoadingView />}
@@ -156,6 +156,7 @@ export default function Home() {
             result={result}
             name={formData.name}
             fortuneDate={formData.fortuneDate}
+            fortunePeriod={formData.fortunePeriod}
             onReset={handleReset}
           />
         )}

@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FortuneFormData, BloodType, RokuseiStar } from '@/lib/types'
-import { calcRokuseiStar, getZodiacSign, getTodayString } from '@/lib/calculations'
+import { FortuneFormData, BloodType, RokuseiStar, FortunePeriod } from '@/lib/types'
+import { calcRokuseiStar, getZodiacSign, getTodayString, getTodayMonthString } from '@/lib/calculations'
 
 interface FortuneFormProps {
   initialData: FortuneFormData
   onSubmit: (data: FortuneFormData) => void
-  isLoading: boolean
 }
 
 const BLOOD_TYPES: BloodType[] = ['A', 'B', 'O', 'AB']
@@ -21,7 +20,13 @@ const ROKUSEI_STARS: RokuseiStar[] = [
   '天王星人（＋）', '天王星人（−）',
 ]
 
-export default function FortuneForm({ initialData, onSubmit, isLoading }: FortuneFormProps) {
+const PERIOD_OPTIONS: { value: FortunePeriod; label: string; icon: string }[] = [
+  { value: 'day',   label: '日運', icon: '☀️' },
+  { value: 'week',  label: '週運', icon: '📅' },
+  { value: 'month', label: '月運', icon: '🌙' },
+]
+
+export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps) {
   const [data, setData] = useState<FortuneFormData>(initialData)
   const [zodiac, setZodiac] = useState('')
   const [autoStar, setAutoStar] = useState('')
@@ -29,13 +34,22 @@ export default function FortuneForm({ initialData, onSubmit, isLoading }: Fortun
   useEffect(() => {
     if (data.birthdate) {
       setZodiac(getZodiacSign(data.birthdate))
-      const star = calcRokuseiStar(data.birthdate)
-      setAutoStar(star)
+      setAutoStar(calcRokuseiStar(data.birthdate))
     }
   }, [data.birthdate])
 
-  const set = <K extends keyof FortuneFormData>(key: K, value: FortuneFormData[K]) => {
+  const set = <K extends keyof FortuneFormData>(key: K, value: FortuneFormData[K]) =>
     setData((prev) => ({ ...prev, [key]: value }))
+
+  const handlePeriodChange = (period: FortunePeriod) => {
+    set('fortunePeriod', period)
+    // 月運に切り替えたらmonth形式に、それ以外はday形式に
+    if (period === 'month') {
+      set('fortuneDate', getTodayMonthString())
+    } else if (data.fortuneDate.length === 7) {
+      // month形式(YYYY-MM)からday形式に戻す
+      set('fortuneDate', getTodayString())
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -43,13 +57,32 @@ export default function FortuneForm({ initialData, onSubmit, isLoading }: Fortun
     onSubmit(data)
   }
 
-  const handleApplyAutoStar = () => {
-    if (autoStar) set('rokuseiStar', autoStar as RokuseiStar)
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
-      {/* Basic Info */}
+
+      {/* 占う期間 */}
+      <div className="glass-card p-5">
+        <p className="text-xs text-slate-400 font-medium mb-3">占いの種類</p>
+        <div className="flex gap-2">
+          {PERIOD_OPTIONS.map(({ value, label, icon }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => handlePeriodChange(value)}
+              className={`flex-1 py-3 rounded-xl border text-sm font-semibold transition-all flex flex-col items-center gap-1 ${
+                data.fortunePeriod === value
+                  ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/30'
+                  : 'border-purple-900/40 text-slate-400 hover:border-purple-500/50 hover:text-slate-300'
+              }`}
+            >
+              <span className="text-lg">{icon}</span>
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 基本情報 */}
       <div className="glass-card p-6 space-y-5">
         <h2 className="text-sm font-semibold text-purple-300 uppercase tracking-widest flex items-center gap-2">
           <span>✦</span> 基本情報
@@ -111,7 +144,7 @@ export default function FortuneForm({ initialData, onSubmit, isLoading }: Fortun
         </div>
       </div>
 
-      {/* Fortune Settings */}
+      {/* 占術設定 */}
       <div className="glass-card p-6 space-y-5">
         <h2 className="text-sm font-semibold text-purple-300 uppercase tracking-widest flex items-center gap-2">
           <span>✦</span> 占術設定
@@ -125,7 +158,7 @@ export default function FortuneForm({ initialData, onSubmit, isLoading }: Fortun
             {autoStar && (
               <button
                 type="button"
-                onClick={handleApplyAutoStar}
+                onClick={() => set('rokuseiStar', autoStar as RokuseiStar)}
                 className="text-xs text-purple-400 hover:text-purple-300 transition-colors underline underline-offset-2"
               >
                 自動計算: {autoStar}
@@ -159,7 +192,7 @@ export default function FortuneForm({ initialData, onSubmit, isLoading }: Fortun
         </div>
       </div>
 
-      {/* Question & Date */}
+      {/* 占いの詳細 */}
       <div className="glass-card p-6 space-y-5">
         <h2 className="text-sm font-semibold text-purple-300 uppercase tracking-widest flex items-center gap-2">
           <span>✦</span> 占いの詳細
@@ -167,20 +200,31 @@ export default function FortuneForm({ initialData, onSubmit, isLoading }: Fortun
 
         <div>
           <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-            占いたい日付 <span className="text-rose-400">*</span>
+            {data.fortunePeriod === 'month' ? '占いたい月' : '占いたい日付'}{' '}
+            <span className="text-rose-400">*</span>
           </label>
-          <input
-            type="date"
-            className="fortune-input fortune-select"
-            value={data.fortuneDate}
-            onChange={(e) => set('fortuneDate', e.target.value)}
-            required
-          />
+          {data.fortunePeriod === 'month' ? (
+            <input
+              type="month"
+              className="fortune-input fortune-select"
+              value={data.fortuneDate.length === 7 ? data.fortuneDate : data.fortuneDate.slice(0, 7)}
+              onChange={(e) => set('fortuneDate', e.target.value)}
+              required
+            />
+          ) : (
+            <input
+              type="date"
+              className="fortune-input fortune-select"
+              value={data.fortuneDate.length === 10 ? data.fortuneDate : getTodayString()}
+              onChange={(e) => set('fortuneDate', e.target.value)}
+              required
+            />
+          )}
         </div>
 
         <div>
           <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-            今日のご質問・お悩み
+            ご質問・お悩み
             <span className="text-slate-600 ml-1">（任意）</span>
           </label>
           <textarea
@@ -193,14 +237,14 @@ export default function FortuneForm({ initialData, onSubmit, isLoading }: Fortun
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="btn-primary w-full text-center disabled:opacity-50 disabled:cursor-not-allowed"
-      >
+      <button type="submit" className="btn-primary w-full text-center">
         <span className="flex items-center justify-center gap-2">
           <span>🔮</span>
-          <span>占う</span>
+          <span>
+            {data.fortunePeriod === 'day'   && '今日の運勢を占う'}
+            {data.fortunePeriod === 'week'  && '今週の運勢を占う'}
+            {data.fortunePeriod === 'month' && '今月の運勢を占う'}
+          </span>
         </span>
       </button>
     </form>

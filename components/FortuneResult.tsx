@@ -117,15 +117,24 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
       <div
         className={`glass-card p-6 border bg-gradient-to-br ${RATING_BG[result.overall_rating]} animate-slide-up`}
       >
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">総合運</p>
-          <div className="flex items-center gap-2">
-            <div className={`rating-badge rating-${result.overall_rating}`}>{result.overall_rating}</div>
-            <span className={`text-sm font-bold rating-large-${result.overall_rating}`}>
-              {RATING_LABEL[result.overall_rating]}
-            </span>
+        {/* Large rating symbol */}
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest text-center mb-3">総合運</p>
+        <div className="flex flex-col items-center mb-5">
+          <div className={`rating-large rating-large-${result.overall_rating}`}>
+            {result.overall_rating}
           </div>
+          <p className={`text-xl font-bold mt-2 rating-large-${result.overall_rating}`}>
+            {RATING_LABEL[result.overall_rating]}
+          </p>
         </div>
+
+        {/* Reason */}
+        <div className="bg-white/5 rounded-xl p-3 mb-4">
+          <p className="text-xs text-purple-300 font-semibold mb-1">判定理由</p>
+          <p className="text-sm text-slate-300 leading-relaxed">{result.overall_reason}</p>
+        </div>
+
+        {/* Flow / Caution / Action */}
         <div className="space-y-3">
           <p className="text-sm text-slate-300 leading-relaxed">{result.overall_flow}</p>
           <div className="flex gap-3">

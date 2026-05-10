@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { FortuneResult, Rating, FortunePeriod } from '@/lib/types'
+import type { FortuneResult, FortuneCategoryResult, Rating, FortunePeriod } from '@/lib/types'
 import { formatDateJP, getWeekRange, getMonthRange } from '@/lib/calculations'
 
 interface FortuneResultProps {
@@ -29,23 +29,37 @@ const RATING_BG: Record<Rating, string> = {
 interface FortuneCategoryCardProps {
   icon: string
   title: string
-  rating: Rating
-  description: string
+  data: FortuneCategoryResult
   delay?: number
 }
 
-function FortuneCategoryCard({ icon, title, rating, description, delay = 0 }: FortuneCategoryCardProps) {
+function FortuneCategoryCard({ icon, title, data, delay = 0 }: FortuneCategoryCardProps) {
   return (
     <div
-      className={`glass-card p-4 border bg-gradient-to-br ${RATING_BG[rating]} animate-slide-up`}
+      className={`glass-card p-4 border bg-gradient-to-br ${RATING_BG[data.rating]} animate-slide-up`}
       style={{ animationDelay: `${delay}ms`, animationFillMode: 'both' }}
     >
-      <div className="flex items-center gap-3 mb-2.5">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-3">
         <span className="text-xl">{icon}</span>
         <span className="text-sm font-semibold text-slate-300">{title}</span>
-        <div className={`rating-badge rating-${rating} ml-auto`}>{rating}</div>
+        <div className={`rating-badge rating-${data.rating} ml-auto`}>{data.rating}</div>
       </div>
-      <p className="text-sm text-slate-300 leading-relaxed">{description}</p>
+      {/* Flow / Caution / Action */}
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <span className="text-xs text-blue-400 font-semibold w-8 flex-shrink-0 pt-0.5">流れ</span>
+          <p className="text-xs text-slate-300 leading-relaxed">{data.flow}</p>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-xs text-amber-400 font-semibold w-8 flex-shrink-0 pt-0.5">注意</span>
+          <p className="text-xs text-slate-300 leading-relaxed">{data.caution}</p>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-xs text-emerald-400 font-semibold w-8 flex-shrink-0 pt-0.5">対策</span>
+          <p className="text-xs text-slate-300 leading-relaxed">{data.action}</p>
+        </div>
+      </div>
     </div>
   )
 }
@@ -71,7 +85,6 @@ function FortuneDetailRow({ icon, label, text }: FortuneDetailRowProps) {
 export default function FortuneResult({ result, name, fortuneDate, fortunePeriod = 'day', onReset }: FortuneResultProps) {
   const [showDetails, setShowDetails] = useState(false)
 
-  // Build period label and badge
   const periodBadge = fortunePeriod === 'week' ? '週運' : fortunePeriod === 'month' ? '月運' : '日運'
   const periodIcon  = fortunePeriod === 'week' ? '📅' : fortunePeriod === 'month' ? '🌙' : '☀️'
   const dateLabel =
@@ -81,15 +94,18 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
       ? `${getMonthRange(fortuneDate).label}（1ヶ月）`
       : formatDateJP(fortuneDate)
 
+  const periodWord = fortunePeriod === 'week' ? '今週' : fortunePeriod === 'month' ? '今月' : '今日'
+
   const categories: FortuneCategoryCardProps[] = [
-    { icon: '💼', title: '仕事運', rating: result.work_fortune.rating, description: result.work_fortune.description, delay: 100 },
-    { icon: '💰', title: '金運', rating: result.money_fortune.rating, description: result.money_fortune.description, delay: 200 },
-    { icon: '❤️', title: '恋愛・対人運', rating: result.love_fortune.rating, description: result.love_fortune.description, delay: 300 },
-    { icon: '🌿', title: '健康運', rating: result.health_fortune.rating, description: result.health_fortune.description, delay: 400 },
+    { icon: '💼', title: '仕事運', data: result.work_fortune, delay: 100 },
+    { icon: '💰', title: '金運',   data: result.money_fortune,  delay: 200 },
+    { icon: '❤️', title: '恋愛・対人運', data: result.love_fortune, delay: 300 },
+    { icon: '🌿', title: '健康運', data: result.health_fortune, delay: 400 },
   ]
 
   return (
     <div className="space-y-5 animate-fade-in">
+
       {/* Header */}
       <div className="text-center py-2">
         <div className="inline-flex items-center gap-1.5 bg-purple-900/40 border border-purple-700/40 rounded-full px-3 py-1 text-xs text-purple-300 font-semibold mb-2">
@@ -97,25 +113,36 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
           <span>{periodBadge}</span>
         </div>
         <p className="text-xs text-slate-500 mb-1">{dateLabel}</p>
-        <h2 className="text-xl font-bold text-white">
-          {name}さんの運勢
-        </h2>
+        <h2 className="text-xl font-bold text-white">{name}さんの運勢鑑定</h2>
       </div>
 
       {/* Overall Rating */}
       <div
-        className={`glass-card p-8 text-center border bg-gradient-to-br ${RATING_BG[result.overall_rating]} animate-slide-up`}
+        className={`glass-card p-6 border bg-gradient-to-br ${RATING_BG[result.overall_rating]} animate-slide-up`}
       >
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">総合運</p>
-        <div className={`rating-large rating-large-${result.overall_rating} mb-2`}>
-          {result.overall_rating}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">総合運</p>
+          <div className="flex items-center gap-2">
+            <div className={`rating-badge rating-${result.overall_rating}`}>{result.overall_rating}</div>
+            <span className={`text-sm font-bold rating-large-${result.overall_rating}`}>
+              {RATING_LABEL[result.overall_rating]}
+            </span>
+          </div>
         </div>
-        <p className={`text-lg font-bold mb-4 rating-large-${result.overall_rating}`}>
-          {RATING_LABEL[result.overall_rating]}
-        </p>
-        <p className="text-sm text-slate-300 leading-relaxed max-w-sm mx-auto">
-          {result.overall_description}
-        </p>
+        <div className="space-y-3">
+          <div className="flex gap-3">
+            <span className="text-xs text-blue-400 font-semibold w-10 flex-shrink-0 pt-0.5">📈 流れ</span>
+            <p className="text-sm text-slate-300 leading-relaxed">{result.overall_flow}</p>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-xs text-amber-400 font-semibold w-10 flex-shrink-0 pt-0.5">⚠️ 注意</span>
+            <p className="text-sm text-slate-300 leading-relaxed">{result.overall_caution}</p>
+          </div>
+          <div className="flex gap-3">
+            <span className="text-xs text-emerald-400 font-semibold w-10 flex-shrink-0 pt-0.5">✅ 対策</span>
+            <p className="text-sm text-slate-300 leading-relaxed">{result.overall_action}</p>
+          </div>
+        </div>
       </div>
 
       {/* Fortune Categories */}
@@ -148,9 +175,7 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
         className="glass-card p-5 animate-slide-up"
         style={{ animationDelay: '550ms', animationFillMode: 'both' }}
       >
-        <p className="text-xs text-purple-300 font-medium mb-3">
-          💡 {fortunePeriod === 'week' ? '今週の' : fortunePeriod === 'month' ? '今月の' : '今日の'}アドバイス
-        </p>
+        <p className="text-xs text-purple-300 font-medium mb-3">💌 占い師からのメッセージ</p>
         <p className="text-sm text-slate-300 leading-relaxed">{result.advice}</p>
       </div>
 
@@ -160,7 +185,7 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
         style={{ animationDelay: '600ms', animationFillMode: 'both' }}
       >
         <p className="text-xs text-purple-300 font-medium mb-3">
-          🔑 {fortunePeriod === 'week' ? '今週の' : fortunePeriod === 'month' ? '今月の' : '今日の'}ひと言
+          🔑 {periodWord}のひと言
         </p>
         <div className="quote-block">{result.todays_word}</div>
       </div>

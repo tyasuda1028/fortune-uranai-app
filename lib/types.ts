@@ -23,12 +23,16 @@ export interface FortuneFormData {
 
 export interface FortuneCategoryResult {
   rating: Rating
-  description: string
+  flow: string      // 流れ
+  caution: string   // 注意点
+  action: string    // 対策
 }
 
 export interface FortuneResult {
   overall_rating: Rating
-  overall_description: string
+  overall_flow: string      // 総合の流れ
+  overall_caution: string   // 総合の注意点
+  overall_action: string    // 総合の対策
   work_fortune: FortuneCategoryResult
   money_fortune: FortuneCategoryResult
   love_fortune: FortuneCategoryResult

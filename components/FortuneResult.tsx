@@ -12,25 +12,11 @@ interface FortuneResultProps {
   onReset: () => void
 }
 
-const SCORE_LABEL = (score: number): string => {
-  if (score >= 80) return '非常に良い'
-  if (score >= 60) return '良い'
-  if (score >= 40) return 'やや注意'
-  return '要注意'
-}
-
-const SCORE_COLOR = (score: number): string => {
-  if (score >= 80) return 'text-amber-400'
-  if (score >= 60) return 'text-emerald-400'
-  if (score >= 40) return 'text-sky-400'
-  return 'text-rose-400'
-}
-
-const SCORE_BAR_COLOR = (score: number): string => {
-  if (score >= 80) return 'bg-amber-400'
-  if (score >= 60) return 'bg-emerald-400'
-  if (score >= 40) return 'bg-sky-400'
-  return 'bg-rose-400'
+const RATING_LABEL: Record<Rating, string> = {
+  '◎': '大吉',
+  '◯': '吉',
+  '△': '小吉',
+  '×': '注意',
 }
 
 const RATING_BG: Record<Rating, string> = {
@@ -134,30 +120,17 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
       <div
         className={`glass-card p-6 border bg-gradient-to-br ${RATING_BG[result.overall_rating]} animate-slide-up`}
       >
-        {/* Score display */}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">総合評価</p>
-          <span className="text-xs text-slate-500">{SCORE_LABEL(result.overall_score ?? 0)}</span>
-        </div>
-        <div className="mb-4">
-          <div className="flex items-end gap-1 mb-2">
-            <span className={`text-5xl font-bold tabular-nums ${SCORE_COLOR(result.overall_score ?? 0)}`}>
-              {result.overall_score ?? '–'}
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">総合運</p>
+          <div className="flex items-center gap-2">
+            <div className={`rating-badge rating-${result.overall_rating}`}>{result.overall_rating}</div>
+            <span className={`text-sm font-bold rating-large-${result.overall_rating}`}>
+              {RATING_LABEL[result.overall_rating]}
             </span>
-            <span className="text-slate-500 text-lg mb-1">/ 100</span>
-          </div>
-          {/* Score bar */}
-          <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ${SCORE_BAR_COLOR(result.overall_score ?? 0)}`}
-              style={{ width: `${result.overall_score ?? 0}%` }}
-            />
           </div>
         </div>
-
-        {/* Flow / Caution / Action */}
-        <div className="space-y-3 pt-1 border-t border-white/10">
-          <div className="flex gap-3 pt-3">
+        <div className="space-y-3">
+          <div className="flex gap-3">
             <span className="text-xs text-blue-400 font-semibold w-10 flex-shrink-0 pt-0.5">📈 流れ</span>
             <p className="text-sm text-slate-300 leading-relaxed">{result.overall_flow}</p>
           </div>

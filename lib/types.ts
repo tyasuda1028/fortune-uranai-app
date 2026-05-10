@@ -30,6 +30,7 @@ export interface FortuneCategoryResult {
 
 export interface FortuneResult {
   overall_rating: Rating
+  overall_score: number     // 総合評価スコア 0〜100
   overall_flow: string      // 総合の流れ
   overall_caution: string   // 総合の注意点
   overall_action: string    // 総合の対策

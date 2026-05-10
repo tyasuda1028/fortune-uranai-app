@@ -47,10 +47,7 @@ function FortuneCategoryCard({ icon, title, data, delay = 0 }: FortuneCategoryCa
       </div>
       {/* Flow / Caution / Action */}
       <div className="space-y-2">
-        <div className="flex gap-2">
-          <span className="text-xs text-blue-400 font-semibold w-8 flex-shrink-0 pt-0.5">流れ</span>
-          <p className="text-xs text-slate-300 leading-relaxed">{data.flow}</p>
-        </div>
+        <p className="text-xs text-slate-300 leading-relaxed">{data.flow}</p>
         <div className="flex gap-2">
           <span className="text-xs text-amber-400 font-semibold w-8 flex-shrink-0 pt-0.5">注意</span>
           <p className="text-xs text-slate-300 leading-relaxed">{data.caution}</p>
@@ -130,10 +127,7 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
           </div>
         </div>
         <div className="space-y-3">
-          <div className="flex gap-3">
-            <span className="text-xs text-blue-400 font-semibold w-10 flex-shrink-0 pt-0.5">📈 流れ</span>
-            <p className="text-sm text-slate-300 leading-relaxed">{result.overall_flow}</p>
-          </div>
+          <p className="text-sm text-slate-300 leading-relaxed">{result.overall_flow}</p>
           <div className="flex gap-3">
             <span className="text-xs text-amber-400 font-semibold w-10 flex-shrink-0 pt-0.5">⚠️ 注意</span>
             <p className="text-sm text-slate-300 leading-relaxed">{result.overall_caution}</p>

@@ -237,7 +237,11 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
       <button type="submit" className="btn-primary w-full text-center">
         <span className="flex items-center justify-center gap-2">
           <span>🔮</span>
-          <span>占う</span>
+          <span>
+            {data.fortunePeriod === 'day'   && '今日の運勢を占う'}
+            {data.fortunePeriod === 'week'  && '今週の運勢を占う'}
+            {data.fortunePeriod === 'month' && '今月の運勢を占う'}
+          </span>
         </span>
       </button>
     </form>

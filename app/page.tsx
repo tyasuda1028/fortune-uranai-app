@@ -58,6 +58,8 @@ function StarsBackground() {
   )
 }
 
+const PROFILE_KEY = 'fortune_profile'
+
 export default function Home() {
   const [step, setStep] = useState<Step>('form')
   const [result, setResult] = useState<FortuneResultType | null>(null)
@@ -73,7 +75,36 @@ export default function Home() {
     fortunePeriod: 'day',
   })
 
+  // 初回マウント時に保存済みプロフィールを復元
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(PROFILE_KEY)
+      if (saved) {
+        const p = JSON.parse(saved)
+        setFormData(prev => ({
+          ...prev,
+          name:          p.name          ?? prev.name,
+          birthdate:     p.birthdate     ?? prev.birthdate,
+          bloodType:     p.bloodType     ?? prev.bloodType,
+          rokuseiStar:   p.rokuseiStar   ?? prev.rokuseiStar,
+          isReigoSeijin: p.isReigoSeijin ?? prev.isReigoSeijin,
+        }))
+      }
+    } catch { /* ignore */ }
+  }, [])
+
   const handleSubmit = async (data: FortuneFormData) => {
+    // プロフィール情報を保存（質問・占い日付は保存しない）
+    try {
+      localStorage.setItem(PROFILE_KEY, JSON.stringify({
+        name:          data.name,
+        birthdate:     data.birthdate,
+        bloodType:     data.bloodType,
+        rokuseiStar:   data.rokuseiStar,
+        isReigoSeijin: data.isReigoSeijin,
+      }))
+    } catch { /* ignore */ }
+
     setFormData(data)
     setStep('loading')
     setError(null)

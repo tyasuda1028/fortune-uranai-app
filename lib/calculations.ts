@@ -21,18 +21,46 @@ export function getZodiacSign(birthdate: string): string {
 }
 
 // ── 六星占術 ─────────────────────────────────────
+// 参考: https://www.plus-a.net/uranai/unmeisu/
+// 算出手順:
+//   1. 基準点(1975年1月=44)から生まれ年月の運命数を計算
+//   2. 星数 = 運命数 - 1 + 誕生日  (61以上なら-60)
+//   3. 星数の範囲 → 星人 (0-10:土星人 11-20:金星人 21-30:火星人
+//                         31-40:天王星人 41-50:木星人 51-60:水星人)
+//   4. 陰陽 = 生まれ年(節分前は前年)の奇偶 (奇数=＋ 偶数=−)
 export function calcRokuseiStar(birthdate: string): RokuseiStar {
   const date = new Date(birthdate)
-  let year = date.getFullYear()
+  const year  = date.getFullYear()
   const month = date.getMonth() + 1
-  const day = date.getDate()
+  const day   = date.getDate()
 
-  if (month === 1 || (month === 2 && day <= 3)) year--
+  // 節分前（1月・2月3日まで）は陰陽判定を前年で行う
+  const signYear = (month === 1 || (month === 2 && day <= 3)) ? year - 1 : year
 
-  const starNames = ['天王星人', '木星人', '水星人', '土星人', '金星人', '火星人']
-  const star = starNames[year % 6]
-  const sign = year % 2 === 1 ? '（＋）' : '（−）'
-  return `${star}${sign}` as RokuseiStar
+  // 運命数を算出 (基準: 1975年1月1日 = 44)
+  // 各月1日までの経過日数(ローカル日付)で計算
+  const refMs     = new Date(1975, 0, 1).getTime()
+  const targetMs  = new Date(year, month - 1, 1).getTime()
+  const days      = Math.round((targetMs - refMs) / 86400000)
+  const unmei     = ((43 + days) % 60 + 60) % 60 + 1  // 1〜60
+
+  // 星数 (1〜60)
+  let starNum = unmei - 1 + day
+  if (starNum > 60) starNum -= 60
+
+  // 星人の決定
+  let starName: string
+  if      (starNum <= 10) starName = '土星人'
+  else if (starNum <= 20) starName = '金星人'
+  else if (starNum <= 30) starName = '火星人'
+  else if (starNum <= 40) starName = '天王星人'
+  else if (starNum <= 50) starName = '木星人'
+  else                    starName = '水星人'
+
+  // 陰陽 (奇数年=プラス 偶数年=マイナス)
+  const sign = signYear % 2 === 1 ? '（＋）' : '（−）'
+
+  return `${starName}${sign}` as RokuseiStar
 }
 
 // ── 数秘術 ────────────────────────────────────────

@@ -57,8 +57,9 @@ export function calcRokuseiStar(birthdate: string): RokuseiStar {
   else if (starNum <= 50) starName = '木星人'
   else                    starName = '水星人'
 
-  // 陰陽 (奇数年=プラス 偶数年=マイナス)
-  const sign = signYear % 2 === 1 ? '（＋）' : '（−）'
+  // 陰陽 (偶数年=プラス 奇数年=マイナス)
+  // 十干: 甲丙戊庚壬(陽/＋)=偶数年, 乙丁己辛癸(陰/－)=奇数年
+  const sign = signYear % 2 === 0 ? '（＋）' : '（−）'
 
   return `${starName}${sign}` as RokuseiStar
 }

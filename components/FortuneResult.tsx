@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type { FortuneResult, FortuneCategoryResult, Rating, FortunePeriod } from '@/lib/types'
+import type { FortuneResult, FortuneCategoryResult, TarotCard, Rating, FortunePeriod } from '@/lib/types'
 import { formatDateJP, getWeekRange, getMonthRange } from '@/lib/calculations'
 
 interface FortuneResultProps {
@@ -154,6 +154,43 @@ export default function FortuneResult({ result, name, fortuneDate, fortunePeriod
           <FortuneCategoryCard key={cat.title} {...cat} />
         ))}
       </div>
+
+      {/* Tarot Reading */}
+      {result.tarot_reading && (
+        <div
+          className="glass-card p-5 animate-slide-up"
+          style={{ animationDelay: '480ms', animationFillMode: 'both' }}
+        >
+          <p className="text-xs font-semibold text-purple-300 uppercase tracking-widest mb-4">
+            🃏 タロットリーディング（3枚引き）
+          </p>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {([result.tarot_reading.card1, result.tarot_reading.card2, result.tarot_reading.card3] as TarotCard[]).map((card) => (
+              <div key={card.role} className="flex flex-col items-center text-center">
+                {/* Card */}
+                <div className="w-full bg-gradient-to-b from-purple-900/60 to-indigo-900/60 border border-purple-700/40 rounded-xl p-3 mb-2">
+                  <p className="text-xs text-purple-400 font-medium mb-2">{card.role}</p>
+                  <p className="text-sm font-bold text-white leading-snug mb-1">{card.name.split('（')[0]}</p>
+                  <p className="text-xs text-slate-500">{card.name.match(/（(.+)）/)?.[1] ?? ''}</p>
+                  <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full font-semibold ${
+                    card.position === '正位置'
+                      ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/40'
+                      : 'bg-rose-900/50 text-rose-300 border border-rose-700/40'
+                  }`}>
+                    {card.position}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">{card.meaning}</p>
+              </div>
+            ))}
+          </div>
+          {/* Summary */}
+          <div className="bg-purple-900/20 border border-purple-700/30 rounded-xl p-3">
+            <p className="text-xs text-purple-300 font-medium mb-1">総合メッセージ</p>
+            <p className="text-sm text-slate-300 leading-relaxed">{result.tarot_reading.summary}</p>
+          </div>
+        </div>
+      )}
 
       {/* Lucky Color */}
       <div

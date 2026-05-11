@@ -28,6 +28,20 @@ export interface FortuneCategoryResult {
   action: string    // 対策
 }
 
+export interface TarotCard {
+  name: string        // 例: "愚者（The Fool）"
+  position: '正位置' | '逆位置'
+  role: string        // 例: "現在の状況"
+  meaning: string     // カードの解釈
+}
+
+export interface TarotReading {
+  card1: TarotCard
+  card2: TarotCard
+  card3: TarotCard
+  summary: string     // 3枚の総合メッセージ
+}
+
 export interface FortuneResult {
   overall_rating: Rating
   overall_reason: string    // 判定理由
@@ -38,6 +52,7 @@ export interface FortuneResult {
   money_fortune: FortuneCategoryResult
   love_fortune: FortuneCategoryResult
   health_fortune: FortuneCategoryResult
+  tarot_reading: TarotReading
   lucky_color: string
   lucky_color_hex: string
   todays_word: string

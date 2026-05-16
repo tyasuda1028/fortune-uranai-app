@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { UserButton, SignInButton, useUser } from '@clerk/nextjs'
 import FortuneForm from '@/components/FortuneForm'
 import FortuneResult from '@/components/FortuneResult'
 import LoadingView from '@/components/LoadingView'
@@ -61,6 +62,7 @@ function StarsBackground() {
 const PROFILE_KEY = 'fortune_profile'
 
 export default function Home() {
+  const { user, isLoaded } = useUser()
   const [step, setStep] = useState<Step>('form')
   const [result, setResult] = useState<FortuneResultType | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -92,6 +94,16 @@ export default function Home() {
       }
     } catch { /* ignore */ }
   }, [])
+
+  // Clerkサインイン後、名前が未設定なら自動補完
+  useEffect(() => {
+    if (isLoaded && user) {
+      setFormData(prev => ({
+        ...prev,
+        name: prev.name || user.fullName || user.firstName || '',
+      }))
+    }
+  }, [isLoaded, user])
 
   const handleSubmit = async (data: FortuneFormData) => {
     // プロフィール情報を保存（質問・占い日付は保存しない）
@@ -144,6 +156,23 @@ export default function Home() {
       <div className="relative z-10 container mx-auto px-4 py-10 max-w-xl">
         {/* Header */}
         <header className="text-center mb-8 animate-fade-in">
+          {/* Auth bar */}
+          <div className="flex justify-end mb-4">
+            {isLoaded && (
+              user ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400">{user.fullName || user.primaryEmailAddress?.emailAddress}</span>
+                  <UserButton />
+                </div>
+              ) : (
+                <SignInButton mode="modal">
+                  <button className="text-xs text-purple-400 hover:text-purple-300 border border-purple-700/40 hover:border-purple-500/60 rounded-full px-3 py-1.5 transition-colors">
+                    ログイン / 新規登録
+                  </button>
+                </SignInButton>
+              )
+            )}
+          </div>
           <div className="text-5xl mb-3 animate-float">✨</div>
           <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
             運勢占い

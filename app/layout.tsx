@@ -3,7 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { jaJP } from '@clerk/localizations'
 import './globals.css'
 
-import type { Metadata } from 'next'
+
 
 export const metadata: Metadata = {
   title: '無料占い｜六星占術×数秘術×西洋占星術の複合鑑定',

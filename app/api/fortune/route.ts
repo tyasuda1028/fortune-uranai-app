@@ -1,5 +1,6 @@
 import Groq from 'groq-sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import {
   getZodiacSign,
   calcLifePathNumber,
@@ -11,77 +12,125 @@ import {
   getMonthRange,
 } from '@/lib/calculations'
 import { FortuneFormData } from '@/lib/types'
+import { getSubscriptionStatus, incrementUsage } from '@/lib/subscription'
 
-const SYSTEM_PROMPT = `あなたは六星占術・西洋占星術・数秘術・バイオリズム・四柱推命・血液型占い・タロット占いを組み合わせた日本の著名な総合占い師です。
-複数の占術を統合し、「流れ・注意点・対策」の3点でわかりやすく鑑定を行います。
+const FREE_USAGE_LIMIT = 5
 
-必ず以下のJSON形式のみで回答してください。他のテキストは一切含めないでください。
-JSON以外の文字（前後の説明、マークダウンのコードブロック等）は絶対に含めないでください。
+const SYSTEM_PROMPT_BASE = `You are a master fortune teller combining Six-Star Astrology, Western Astrology, Numerology, Biorhythm, Four Pillars of Destiny, Blood Type Astrology, and Tarot.
+You integrate multiple divination methods and provide readings focusing on three points: Flow, Caution, and Action.
+
+Respond ONLY with valid JSON. Do not include any text, explanation, or markdown outside the JSON object.
 
 {
-  "overall_rating": "◎または◯または△または×",
-  "overall_reason": "その総合判定になった理由（複数占術の結果を踏まえて80文字程度で端的に説明）",
-  "overall_flow": "総合運の流れ：この期間の運気の全体的な傾向と方向性（60文字程度）",
-  "overall_caution": "総合的な注意点：特に気をつけるべき落とし穴や状況（50文字程度）",
-  "overall_action": "総合的な対策：この期間に心がけると良い行動・姿勢（50文字程度）",
+  "overall_rating": "one of: ◎ or ◯ or △ or ×",
+  "overall_reason": "reason for overall rating based on multiple methods (~80 chars)",
+  "overall_flow": "overall fortune flow and trend for this period (~60 chars)",
+  "overall_caution": "main caution or pitfall to watch out for (~50 chars)",
+  "overall_action": "recommended action or mindset for this period (~50 chars)",
   "work_fortune": {
-    "rating": "◎または◯または△または×",
-    "flow": "仕事運の流れ（50文字程度）",
-    "caution": "仕事面の注意点（40文字程度）",
-    "action": "仕事面の対策・アドバイス（40文字程度）"
+    "rating": "◎ or ◯ or △ or ×",
+    "flow": "career/work fortune flow (~50 chars)",
+    "caution": "caution for work (~40 chars)",
+    "action": "advice for work (~40 chars)"
   },
   "money_fortune": {
-    "rating": "◎または◯または△または×",
-    "flow": "金運の流れ（50文字程度）",
-    "caution": "金運の注意点（40文字程度）",
-    "action": "金運の対策・アドバイス（40文字程度）"
+    "rating": "◎ or ◯ or △ or ×",
+    "flow": "financial fortune flow (~50 chars)",
+    "caution": "caution for finances (~40 chars)",
+    "action": "advice for finances (~40 chars)"
   },
   "love_fortune": {
-    "rating": "◎または◯または△または×",
-    "flow": "恋愛・対人運の流れ（50文字程度）",
-    "caution": "恋愛・対人面の注意点（40文字程度）",
-    "action": "恋愛・対人面の対策・アドバイス（40文字程度）"
+    "rating": "◎ or ◯ or △ or ×",
+    "flow": "love and relationship fortune flow (~50 chars)",
+    "caution": "caution for relationships (~40 chars)",
+    "action": "advice for relationships (~40 chars)"
   },
   "health_fortune": {
-    "rating": "◎または◯または△または×",
-    "flow": "健康運の流れ（50文字程度）",
-    "caution": "健康面の注意点（40文字程度）",
-    "action": "健康面の対策・アドバイス（40文字程度）"
+    "rating": "◎ or ◯ or △ or ×",
+    "flow": "health fortune flow (~50 chars)",
+    "caution": "caution for health (~40 chars)",
+    "action": "advice for health (~40 chars)"
   },
   "tarot_reading": {
     "card1": {
-      "name": "カード名（日本語名（英語名））例: 愚者（The Fool）",
-      "position": "正位置または逆位置",
-      "role": "現在の状況",
-      "meaning": "このカードが示す意味と解釈（50文字程度）"
+      "name": "card name with both local name and English name, e.g. 愚者（The Fool）",
+      "position": "Upright or Reversed (in output language)",
+      "role": "Current Situation (in output language)",
+      "meaning": "meaning and interpretation of this card (~50 chars)"
     },
     "card2": {
-      "name": "カード名（日本語名（英語名））",
-      "position": "正位置または逆位置",
-      "role": "課題・障害",
-      "meaning": "このカードが示す意味と解釈（50文字程度）"
+      "name": "card name with both local name and English name",
+      "position": "Upright or Reversed (in output language)",
+      "role": "Challenge / Obstacle (in output language)",
+      "meaning": "meaning and interpretation of this card (~50 chars)"
     },
     "card3": {
-      "name": "カード名（日本語名（英語名））",
-      "position": "正位置または逆位置",
-      "role": "アドバイス",
-      "meaning": "このカードが示す意味と解釈（50文字程度）"
+      "name": "card name with both local name and English name",
+      "position": "Upright or Reversed (in output language)",
+      "role": "Advice (in output language)",
+      "meaning": "meaning and interpretation of this card (~50 chars)"
     },
-    "summary": "3枚のカードを踏まえた総合タロットメッセージ（80文字程度）"
+    "summary": "overall tarot message combining all 3 cards (~80 chars)"
   },
-  "lucky_color": "ラッキーカラーの日本語名",
-  "lucky_color_hex": "#6桁16進数カラーコード",
-  "todays_word": "「この期間を象徴する印象的で前向きな一言」",
-  "advice": "占い師からの総合メッセージ（150文字程度、具体的かつ温かみのある言葉で）",
+  "lucky_color": "lucky color name",
+  "lucky_color_hex": "#6-digit hex color code",
+  "todays_word": "an inspiring keyword or phrase representing this period",
+  "advice": "comprehensive message from the fortune teller (~150 chars, warm and specific)",
   "fortune_details": {
-    "rokusei": "六星占術からの解説（60文字程度）",
-    "zodiac": "西洋占星術からの解説（60文字程度）",
-    "numerology": "数秘術からの解説（60文字程度）",
-    "biorhythm": "バイオリズムからの解説（60文字程度）",
-    "blood_type": "血液型占いからの解説（60文字程度）",
-    "shichusuimei": "四柱推命からの解説（60文字程度）"
+    "rokusei": "Six-Star Astrology insight (~60 chars)",
+    "zodiac": "Western Astrology insight (~60 chars)",
+    "numerology": "Numerology insight (~60 chars)",
+    "biorhythm": "Biorhythm insight (~60 chars)",
+    "blood_type": "Blood Type insight (~60 chars)",
+    "shichusuimei": "Four Pillars insight (~60 chars)"
   }
 }`
+
+const SYSTEM_PROMPT = SYSTEM_PROMPT_BASE
+
+// Free plan: no tarot_reading and no fortune_details fields
+const SYSTEM_PROMPT_FREE_BASE = `You are a master fortune teller combining Six-Star Astrology, Western Astrology, Numerology, Biorhythm, Four Pillars of Destiny, and Blood Type Astrology.
+You integrate multiple divination methods and provide readings focusing on three points: Flow, Caution, and Action.
+
+Respond ONLY with valid JSON. Do not include any text, explanation, or markdown outside the JSON object.
+
+{
+  "overall_rating": "one of: ◎ or ◯ or △ or ×",
+  "overall_reason": "reason for overall rating based on multiple methods (~80 chars)",
+  "overall_flow": "overall fortune flow and trend for this period (~60 chars)",
+  "overall_caution": "main caution or pitfall to watch out for (~50 chars)",
+  "overall_action": "recommended action or mindset for this period (~50 chars)",
+  "work_fortune": {
+    "rating": "◎ or ◯ or △ or ×",
+    "flow": "career/work fortune flow (~50 chars)",
+    "caution": "caution for work (~40 chars)",
+    "action": "advice for work (~40 chars)"
+  },
+  "money_fortune": {
+    "rating": "◎ or ◯ or △ or ×",
+    "flow": "financial fortune flow (~50 chars)",
+    "caution": "caution for finances (~40 chars)",
+    "action": "advice for finances (~40 chars)"
+  },
+  "love_fortune": {
+    "rating": "◎ or ◯ or △ or ×",
+    "flow": "love and relationship fortune flow (~50 chars)",
+    "caution": "caution for relationships (~40 chars)",
+    "action": "advice for relationships (~40 chars)"
+  },
+  "health_fortune": {
+    "rating": "◎ or ◯ or △ or ×",
+    "flow": "health fortune flow (~50 chars)",
+    "caution": "caution for health (~40 chars)",
+    "action": "advice for health (~40 chars)"
+  },
+  "lucky_color": "lucky color name",
+  "lucky_color_hex": "#6-digit hex color code",
+  "todays_word": "an inspiring keyword or phrase representing this period",
+  "advice": "comprehensive message from the fortune teller (~150 chars, warm and specific)"
+}`
+
+const SYSTEM_PROMPT_FREE = SYSTEM_PROMPT_FREE_BASE
 
 export async function POST(request: NextRequest) {
   try {
@@ -92,8 +141,28 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Auth check
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'ログインしてから占いをお試しください。', code: 'UNAUTHENTICATED' },
+        { status: 401 }
+      )
+    }
+
+    // Subscription / usage check
+    const subStatus = await getSubscriptionStatus()
+    const isPremium = subStatus.plan === 'premium'
+
+    if (!isPremium && subStatus.usageCount >= FREE_USAGE_LIMIT) {
+      return NextResponse.json(
+        { error: '無料枠を使い切りました。プレミアムプランにアップグレードして無制限でご利用ください。', code: 'USAGE_LIMIT' },
+        { status: 403 }
+      )
+    }
+
     const body: FortuneFormData = await request.json()
-    const { name, birthdate, bloodType, rokuseiStar, isReigoSeijin, question, fortuneDate, fortunePeriod } = body
+    const { name, birthdate, bloodType, rokuseiStar, isReigoSeijin, question, fortuneDate, fortunePeriod, lang } = body
 
     if (!name || !birthdate || !bloodType || !rokuseiStar || !fortuneDate) {
       return NextResponse.json({ error: '必須項目が不足しています。' }, { status: 400 })
@@ -148,12 +217,23 @@ ${question ? `【ご質問・お悩み】\n${question}` : ''}
 上記の情報をすべて考慮した上で、指定のJSON形式で${periodKind}の総合的な運勢鑑定を行ってください。
     `.trim()
 
+    const langInstruction: Record<string, string> = {
+      'ja': 'CRITICAL INSTRUCTION: Write ALL text values in the JSON in JAPANESE (日本語). Every single text field must be in Japanese.',
+      'en': 'CRITICAL INSTRUCTION: Write ALL text values in the JSON in ENGLISH. Every single text field must be in English. Do NOT use Japanese or any other language.',
+      'zh-TW': 'CRITICAL INSTRUCTION: Write ALL text values in the JSON in TRADITIONAL CHINESE (繁體中文). Every single text field must be in Traditional Chinese. Do NOT use Japanese.',
+      'zh-CN': 'CRITICAL INSTRUCTION: Write ALL text values in the JSON in SIMPLIFIED CHINESE (简体中文). Every single text field must be in Simplified Chinese. Do NOT use Japanese.',
+    }
+    const outputLang = lang ?? 'ja'
+    const langPrefix = langInstruction[outputLang] ?? langInstruction['ja']
+    const basePrompt = isPremium ? SYSTEM_PROMPT : SYSTEM_PROMPT_FREE
+    const systemPrompt = langPrefix + '\n\n' + basePrompt + '\n\n' + langPrefix
+
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
       temperature: 0.8,
@@ -171,7 +251,20 @@ ${question ? `【ご質問・お悩み】\n${question}` : ''}
       throw new Error('占い結果の解析に失敗しました。もう一度お試しください。')
     }
 
-    return NextResponse.json(fortuneData)
+    // Increment usage for non-premium users
+    if (!isPremium) {
+      await incrementUsage(userId)
+    }
+
+    const newUsageCount = isPremium ? subStatus.usageCount : subStatus.usageCount + 1
+    const usageRemaining = isPremium ? null : Math.max(0, FREE_USAGE_LIMIT - newUsageCount)
+
+    return NextResponse.json({
+      ...fortuneData,
+      plan: subStatus.plan,
+      usageCount: newUsageCount,
+      usageRemaining,
+    })
   } catch (error) {
     console.error('Fortune API error:', error)
     const message = error instanceof Error ? error.message : '占いの実行中にエラーが発生しました。'

@@ -10,6 +10,16 @@ export type RokuseiStar =
   | '火星人（＋）' | '火星人（−）'
   | '天王星人（＋）' | '天王星人（−）'
 
+export interface SavedProfile {
+  id: string
+  label: string          // ニックネーム（例: 自分、妻）
+  name: string
+  birthdate: string
+  bloodType: BloodType
+  rokuseiStar: RokuseiStar | ''
+  isReigoSeijin: boolean
+}
+
 export interface FortuneFormData {
   name: string
   birthdate: string
@@ -19,6 +29,7 @@ export interface FortuneFormData {
   question: string
   fortuneDate: string      // YYYY-MM-DD
   fortunePeriod: FortunePeriod
+  lang?: string
 }
 
 export interface FortuneCategoryResult {
@@ -52,12 +63,12 @@ export interface FortuneResult {
   money_fortune: FortuneCategoryResult
   love_fortune: FortuneCategoryResult
   health_fortune: FortuneCategoryResult
-  tarot_reading: TarotReading
+  tarot_reading?: TarotReading
   lucky_color: string
   lucky_color_hex: string
   todays_word: string
   advice: string
-  fortune_details: {
+  fortune_details?: {
     rokusei: string
     zodiac: string
     numerology: string
@@ -65,4 +76,41 @@ export interface FortuneResult {
     blood_type: string
     shichusuimei: string
   }
+  // Subscription metadata
+  plan?: 'free' | 'premium'
+  usageCount?: number
+  usageRemaining?: number
+}
+
+// ── 相性占い ──────────────────────────────────────
+
+export interface CompatibilityPerson {
+  name: string
+  birthdate: string
+  bloodType: BloodType
+  rokuseiStar: RokuseiStar | ''
+}
+
+export interface CompatibilityCategoryResult {
+  score: number       // 0〜100
+  rating: Rating
+  comment: string     // 50文字程度
+  advice: string      // 40文字程度
+}
+
+export interface CompatibilityResult {
+  overall_score: number
+  overall_rating: Rating
+  overall_comment: string   // 80文字程度
+  love: CompatibilityCategoryResult
+  work: CompatibilityCategoryResult
+  friendship: CompatibilityCategoryResult
+  perspectives: {
+    rokusei: string      // 六星占術からの相性解説（50文字）
+    blood_type: string   // 血液型からの相性解説（50文字）
+    zodiac: string       // 星座からの相性解説（50文字）
+    numerology: string   // 数秘術からの相性解説（50文字）
+  }
+  lucky_action: string    // 2人の関係を良くするラッキーアクション
+  advice: string          // 占い師からの総合アドバイス（120文字）
 }

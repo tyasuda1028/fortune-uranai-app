@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { FortuneFormData, BloodType, RokuseiStar, FortunePeriod } from '@/lib/types'
 import { calcRokuseiStar, getZodiacSign, getTodayString } from '@/lib/calculations'
+import { useLang } from '@/lib/i18n-context'
 
 interface FortuneFormProps {
   initialData: FortuneFormData
@@ -20,15 +21,16 @@ const ROKUSEI_STARS: RokuseiStar[] = [
   '天王星人（＋）', '天王星人（−）',
 ]
 
-const PERIOD_OPTIONS: { value: FortunePeriod; label: string; icon: string }[] = [
-  { value: 'day',   label: '日運', icon: '☀️' },
-  { value: 'week',  label: '週運', icon: '📅' },
-  { value: 'month', label: '月運', icon: '🌙' },
-]
-
 export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps) {
+  const { tr } = useLang()
   const [data, setData] = useState<FortuneFormData>(initialData)
   const [zodiac, setZodiac] = useState('')
+
+  const PERIOD_OPTIONS: { value: FortunePeriod; label: string; icon: string }[] = [
+    { value: 'day',   label: tr.periodDay, icon: '☀️' },
+    { value: 'week',  label: tr.periodWeek, icon: '📅' },
+    { value: 'month', label: tr.periodMonth, icon: '🌙' },
+  ]
 
   useEffect(() => {
     if (data.birthdate) {
@@ -58,7 +60,7 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
 
       {/* 占う期間 */}
       <div className="glass-card p-5">
-        <p className="text-xs text-slate-400 font-medium mb-3">占いの種類</p>
+        <p className="text-xs text-slate-400 font-medium mb-3">{tr.periodLabel}</p>
         <div className="flex gap-2">
           {PERIOD_OPTIONS.map(({ value, label, icon }) => (
             <button
@@ -81,17 +83,17 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
       {/* 基本情報 */}
       <div className="glass-card p-6 space-y-5">
         <h2 className="text-sm font-semibold text-purple-300 uppercase tracking-widest flex items-center gap-2">
-          <span>✦</span> 基本情報
+          <span>✦</span> {tr.basicInfo}
         </h2>
 
         <div>
           <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-            お名前 <span className="text-rose-400">*</span>
+            {tr.labelName} <span className="text-rose-400">*</span>
           </label>
           <input
             type="text"
             className="fortune-input"
-            placeholder="山田 太郎"
+            placeholder={tr.placeholderName}
             value={data.name}
             onChange={(e) => set('name', e.target.value)}
             required
@@ -100,7 +102,7 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
 
         <div>
           <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-            生年月日 <span className="text-rose-400">*</span>
+            {tr.labelBirthdate} <span className="text-rose-400">*</span>
           </label>
           <input
             type="date"
@@ -119,7 +121,7 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
 
         <div>
           <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-            血液型 <span className="text-rose-400">*</span>
+            {tr.labelBloodType} <span className="text-rose-400">*</span>
           </label>
           <div className="flex gap-2">
             {BLOOD_TYPES.map((bt) => (
@@ -143,14 +145,14 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
       {/* 占術設定 */}
       <div className="glass-card p-6 space-y-5">
         <h2 className="text-sm font-semibold text-purple-300 uppercase tracking-widest flex items-center gap-2">
-          <span>✦</span> 占術設定
+          <span>✦</span> {tr.fortuneSettings}
         </h2>
 
         <div>
           <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-            六星占術の星 <span className="text-rose-400">*</span>
+            {tr.labelRokusei} <span className="text-rose-400">*</span>
             {data.birthdate && (
-              <span className="ml-2 text-purple-400 font-normal">（生年月日から自動設定）</span>
+              <span className="ml-2 text-purple-400 font-normal">{tr.rokuseiAuto}</span>
             )}
           </label>
           <select
@@ -159,7 +161,7 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
             onChange={(e) => set('rokuseiStar', e.target.value as RokuseiStar)}
             required
           >
-            <option value="" disabled>生年月日を入力すると自動設定されます</option>
+            <option value="" disabled>{tr.rokuseiPlaceholder}</option>
             {ROKUSEI_STARS.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
@@ -175,7 +177,7 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
             onChange={(e) => set('isReigoSeijin', e.target.checked)}
           />
           <label htmlFor="reigo" className="text-sm text-slate-300 cursor-pointer">
-            霊合星人です（節分前後生まれ）
+            {tr.labelReigo}
           </label>
         </div>
       </div>
@@ -183,12 +185,12 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
       {/* 占いの詳細 */}
       <div className="glass-card p-6 space-y-5">
         <h2 className="text-sm font-semibold text-purple-300 uppercase tracking-widest flex items-center gap-2">
-          <span>✦</span> 占いの詳細
+          <span>✦</span> {tr.fortuneDetail}
         </h2>
 
         <div>
           <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-            占い開始日 <span className="text-rose-400">*</span>
+            {tr.labelFortuneDate} <span className="text-rose-400">*</span>
           </label>
           <input
             type="date"
@@ -221,13 +223,13 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
 
         <div>
           <label className="block text-xs text-slate-400 mb-1.5 font-medium">
-            ご質問・お悩み
+            {tr.labelQuestion}
             <span className="text-slate-600 ml-1">（任意）</span>
           </label>
           <textarea
             className="fortune-input resize-none"
             rows={3}
-            placeholder="仕事のこと、恋愛のこと、気になっていることを書いてください..."
+            placeholder={tr.placeholderQuestion}
             value={data.question}
             onChange={(e) => set('question', e.target.value)}
           />
@@ -238,9 +240,9 @@ export default function FortuneForm({ initialData, onSubmit }: FortuneFormProps)
         <span className="flex items-center justify-center gap-2">
           <span>🔮</span>
           <span>
-            {data.fortunePeriod === 'day'   && '今日の運勢を占う'}
-            {data.fortunePeriod === 'week'  && '今週の運勢を占う'}
-            {data.fortunePeriod === 'month' && '今月の運勢を占う'}
+            {data.fortunePeriod === 'day'   && tr.submitDay}
+            {data.fortunePeriod === 'week'  && tr.submitWeek}
+            {data.fortunePeriod === 'month' && tr.submitMonth}
           </span>
         </span>
       </button>

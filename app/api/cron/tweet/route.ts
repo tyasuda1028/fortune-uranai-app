@@ -25,25 +25,40 @@ export async function GET(request: NextRequest) {
       weekday: 'long',
     })
 
-    // 3パターンのツイート案を生成
+    // 今日の星座運気ランキング ベスト5ツイート案を3パターン生成
     const completion = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
         {
           role: 'system',
           content: `あなたは運勢占いアプリ「Sophie」の公式Xアカウント担当者です。
-毎朝、フォロワーに向けて今日の運勢メッセージをツイートします。
+毎朝、フォロワーに向けて今日の星座運気ランキング（ベスト5）をツイートします。
 
-3パターンのツイート案を作成してください。
+12星座：おひつじ座♈ おうし座♉ ふたご座♊ かに座♋ しし座♌ おとめ座♍ てんびん座♎ さそり座♏ いて座♐ やぎ座♑ みずがめ座♒ うお座♓
+
+3パターンのツイート案を作成してください（毎回異なるランキングにすること）。
 
 各ツイートのルール：
 - 必ず日本語で書く
 - URL込みで280文字以内（URLは約25文字として計算）
-- 絵文字を2〜3個使う
-- 今日のラッキーカラーを1つ含める
-- 前向きで温かみのあるメッセージにする
-- ハッシュタグを2個含める（例: #今日の運勢 #占い）
+- 今日の運気ランキング上位5位を「1位〜5位」の形式で表示する
+- 各星座に星座絵文字と一言コメント（6文字以内）を付ける
+- ランキング外の人へ「続きはアプリで✨」などアプリへ誘導する一言を入れる
+- ハッシュタグを2個含める（例: #今日の運勢 #星座占い）
 - 末尾に「🔮 https://sophie1028.com」を追加すること
+- 日本語のランキング形式で読みやすく改行を使う
+
+ツイート例（参考フォーマット）：
+✨今日の運気ランキング✨
+1位 ♏さそり座 最強運！
+2位 ♈おひつじ座 絶好調
+3位 ♊ふたご座 チャンス到来
+4位 ♋かに座 愛運上昇
+5位 ♐いて座 金運◎
+
+6位以下の運勢も見たい方は👇
+🔮 https://sophie1028.com
+#今日の運勢 #星座占い
 
 以下のJSON形式で返してください：
 {
@@ -54,11 +69,11 @@ export async function GET(request: NextRequest) {
         },
         {
           role: 'user',
-          content: `${dateStr}の運勢ツイート案を3パターン作成してください。`,
+          content: `${dateStr}の星座運気ランキング（ベスト5）ツイート案を3パターン作成してください。毎日ランキングが変わるよう、ランダムに順位を決めてください。`,
         },
       ],
-      temperature: 0.9,
-      max_tokens: 600,
+      temperature: 0.95,
+      max_tokens: 800,
       response_format: { type: 'json_object' },
     })
 
@@ -89,7 +104,7 @@ export async function GET(request: NextRequest) {
 </head>
 <body>
   <div class="container">
-    <h1>🔮 本日のツイート案</h1>
+    <h1>✨ 本日の星座運気ランキング ベスト5 ツイート案</h1>
     <p class="date">${dateStr}</p>
 
     <div class="tweet-card">
@@ -121,7 +136,7 @@ export async function GET(request: NextRequest) {
     await resend.emails.send({
       from: 'Sophie占い <onboarding@resend.dev>',
       to: [toEmail],
-      subject: `🔮 ${dateStr}のツイート案が届きました`,
+      subject: `✨ ${dateStr}の星座運気ランキング ベスト5ツイート案`,
       html: htmlBody,
     })
 

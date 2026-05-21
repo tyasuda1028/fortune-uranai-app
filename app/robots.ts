@@ -7,7 +7,12 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/'],
+      disallow: [
+        '/api/',
+        '/sign-in',
+        '/sign-up',
+        '/paypal/',
+      ],
     },
     sitemap: `${APP_URL}/sitemap.xml`,
   }

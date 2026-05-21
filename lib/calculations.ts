@@ -1,4 +1,4 @@
-import { RokuseiStar } from './types'
+import { Rating, RokuseiStar } from './types'
 
 // ── 星座 ─────────────────────────────────────────
 export function getZodiacSign(birthdate: string): string {
@@ -231,4 +231,100 @@ export function getTodayMonthString(): string {
   const y = t.getFullYear()
   const m = String(t.getMonth() + 1).padStart(2, '0')
   return `${y}-${m}`
+}
+
+// ── 運勢スコア算出（0〜100）────────────────────────
+// レーティングをAIに委ねず、計算データから忠実に決定する
+export interface FortuneScores {
+  overall:  { score: number; rating: Rating }
+  work:     { score: number; rating: Rating }
+  money:    { score: number; rating: Rating }
+  love:     { score: number; rating: Rating }
+  health:   { score: number; rating: Rating }
+}
+
+function scoreToRating(score: number): Rating {
+  if (score >= 73) return '◎'
+  if (score >= 50) return '◯'
+  if (score >= 28) return '△'
+  return '×'
+}
+
+/** 数秘術: 今日の日数字を1桁に還元 */
+function calcDayNumber(dateStr: string): number {
+  let n = dateStr.replace(/-/g, '').split('').reduce((a, c) => a + parseInt(c), 0)
+  while (n > 9 && n !== 11 && n !== 22 && n !== 33) {
+    n = n.toString().split('').reduce((a, c) => a + parseInt(c), 0)
+  }
+  return n
+}
+
+/** 六星占術サイクル: 生年月日からの60日周期で運勢段階を算出 */
+function calcRokuseiCycleScore(birthdate: string, targetDate: string): number {
+  const birth  = new Date(birthdate).getTime()
+  const target = new Date(targetDate).getTime()
+  const days   = Math.floor((target - birth) / 86400000)
+  const pos    = ((days % 60) + 60) % 60  // 0〜59
+  // 六星占術の運気段階 (大安・中吉・小吉・注意・凶・大凶 を10日ずつ割り当て)
+  if (pos < 10) return 90   // 大安
+  if (pos < 20) return 68   // 中吉
+  if (pos < 30) return 52   // 小吉
+  if (pos < 40) return 38   // 注意
+  if (pos < 50) return 22   // 凶
+  return 12                  // 大凶
+}
+
+/** 数秘術相性スコア: ライフパスナンバーと今日の数字の距離 */
+function calcNumerologyScore(lifePathNumber: number, dayNumber: number): number {
+  const diff = Math.abs(lifePathNumber - dayNumber)
+  if (diff === 0) return 88
+  if (diff === 1) return 72
+  if (diff === 2) return 58
+  if (diff === 3) return 46
+  if (diff <= 5)  return 34
+  return 20
+}
+
+export function calcFortuneScores(
+  biorhythm: { physical: number; emotional: number; intellectual: number },
+  lifePathNumber: number,
+  birthdate: string,
+  targetDate: string,
+  isReigoSeijin: boolean,
+): FortuneScores {
+  // 各バイオリズムを 0〜100 に変換 (-1〜+1 → 0〜100)
+  const phys  = (biorhythm.physical      + 1) / 2 * 100
+  const emo   = (biorhythm.emotional     + 1) / 2 * 100
+  const intel = (biorhythm.intellectual  + 1) / 2 * 100
+
+  const dayNum    = calcDayNumber(targetDate)
+  const numScore  = calcNumerologyScore(lifePathNumber, dayNum)
+  const cycScore  = calcRokuseiCycleScore(birthdate, targetDate)
+
+  // ── カテゴリ別スコア（重みづけ）──
+  const workScore   = intel * 0.50 + phys  * 0.25 + numScore * 0.15 + cycScore * 0.10
+  const moneyScore  = intel * 0.25 + phys  * 0.25 + numScore * 0.25 + cycScore * 0.25
+  const loveScore   = emo   * 0.55 + phys  * 0.20 + numScore * 0.15 + cycScore * 0.10
+  const healthScore = phys  * 0.55 + emo   * 0.25 + intel    * 0.10 + cycScore * 0.10
+
+  // ── 総合スコア ──
+  const rawOverall = workScore * 0.25 + moneyScore * 0.25 + loveScore * 0.25 + healthScore * 0.25
+
+  // 霊合星人補正: 偏差を1.25倍に増幅（良い時はより良く、悪い時はより悪く）
+  const amplify = (score: number) =>
+    isReigoSeijin ? Math.max(0, Math.min(100, 50 + (score - 50) * 1.25)) : score
+
+  const overall = Math.round(amplify(rawOverall))
+  const work    = Math.round(amplify(workScore))
+  const money   = Math.round(amplify(moneyScore))
+  const love    = Math.round(amplify(loveScore))
+  const health  = Math.round(amplify(healthScore))
+
+  return {
+    overall: { score: overall, rating: scoreToRating(overall) },
+    work:    { score: work,    rating: scoreToRating(work)    },
+    money:   { score: money,   rating: scoreToRating(money)   },
+    love:    { score: love,    rating: scoreToRating(love)    },
+    health:  { score: health,  rating: scoreToRating(health)  },
+  }
 }

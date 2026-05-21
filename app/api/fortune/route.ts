@@ -7,6 +7,7 @@ import {
   calcBiorhythm,
   calcAge,
   calcShichuSuimei,
+  calcFortuneScores,
   formatDateJP,
   getWeekRange,
   getMonthRange,
@@ -19,12 +20,7 @@ const FREE_USAGE_LIMIT = 5
 const SYSTEM_PROMPT_BASE = `You are a master fortune teller combining Six-Star Astrology, Western Astrology, Numerology, Biorhythm, Four Pillars of Destiny, Blood Type Astrology, and Tarot.
 You integrate multiple divination methods and provide readings focusing on three points: Flow, Caution, and Action.
 
-CRITICAL RATING RULES - YOU MUST FOLLOW THIS DISTRIBUTION:
-- ◎ (excellent): Use ONLY when ALL major factors align perfectly. Expected frequency: ~10-15%. This is RARE.
-- ◯ (good): Use when most factors are positive. Expected frequency: ~35%.
-- △ (caution): Use when factors are mixed or mildly unfavorable. Expected frequency: ~35%.
-- × (difficult): Use when multiple factors indicate challenges. Expected frequency: ~15%.
-DO NOT default to ◎. Objectively evaluate biorhythm values, Six-Star Astrology cycle, and numerology before assigning any rating. Each category (work, money, love, health) can have a DIFFERENT rating. Varied ratings make the reading authentic.
+CRITICAL: The ratings (overall_rating, work_fortune.rating, money_fortune.rating, love_fortune.rating, health_fortune.rating) are PRE-CALCULATED from actual biorhythm, numerology, and Six-Star Astrology data and will be injected into your prompt. You MUST use EXACTLY those ratings — do not change them. Generate all text content to naturally explain and match those pre-calculated ratings.
 
 Respond ONLY with valid JSON. Do not include any text, explanation, or markdown outside the JSON object.
 
@@ -99,12 +95,7 @@ const SYSTEM_PROMPT = SYSTEM_PROMPT_BASE
 const SYSTEM_PROMPT_FREE_BASE = `You are a master fortune teller combining Six-Star Astrology, Western Astrology, Numerology, Biorhythm, Four Pillars of Destiny, and Blood Type Astrology.
 You integrate multiple divination methods and provide readings focusing on three points: Flow, Caution, and Action.
 
-CRITICAL RATING RULES - YOU MUST FOLLOW THIS DISTRIBUTION:
-- ◎ (excellent): Use ONLY when ALL major factors align perfectly. Expected frequency: ~10-15%. This is RARE.
-- ◯ (good): Use when most factors are positive. Expected frequency: ~35%.
-- △ (caution): Use when factors are mixed or mildly unfavorable. Expected frequency: ~35%.
-- × (difficult): Use when multiple factors indicate challenges. Expected frequency: ~15%.
-DO NOT default to ◎. Objectively evaluate biorhythm values, Six-Star Astrology cycle, and numerology before assigning any rating. Each category (work, money, love, health) can have a DIFFERENT rating. Varied ratings make the reading authentic.
+CRITICAL: The ratings (overall_rating, work_fortune.rating, money_fortune.rating, love_fortune.rating, health_fortune.rating) are PRE-CALCULATED from actual biorhythm, numerology, and Six-Star Astrology data and will be injected into your prompt. You MUST use EXACTLY those ratings — do not change them. Generate all text content to naturally explain and match those pre-calculated ratings.
 
 Respond ONLY with valid JSON. Do not include any text, explanation, or markdown outside the JSON object.
 
@@ -192,6 +183,15 @@ export async function POST(request: NextRequest) {
     const shichusuimei = calcShichuSuimei(birthdate)
     const formattedBirthdate = formatDateJP(birthdate)
 
+    // ── 運勢スコアをコードで算出（AIに委ねない）──
+    const fortuneScores = calcFortuneScores(
+      biorhythm,
+      lifePathNumber,
+      birthdate,
+      refDate,
+      isReigoSeijin ?? false,
+    )
+
     // Period-specific label
     let periodLabel: string
     let periodKind: string
@@ -226,9 +226,16 @@ export async function POST(request: NextRequest) {
   - 感情リズム: ${biorhythm.emotionalLabel}（${(biorhythm.emotional * 100).toFixed(0)}%）
   - 知性リズム: ${biorhythm.intellectualLabel}（${(biorhythm.intellectual * 100).toFixed(0)}%）
 
+【計算済みレーティング（変更禁止・必ずこの値を使用すること）】
+- overall_rating: "${fortuneScores.overall.rating}"  （総合スコア: ${fortuneScores.overall.score}/100）
+- work_fortune.rating: "${fortuneScores.work.rating}"  （仕事スコア: ${fortuneScores.work.score}/100）
+- money_fortune.rating: "${fortuneScores.money.rating}"  （金運スコア: ${fortuneScores.money.score}/100）
+- love_fortune.rating: "${fortuneScores.love.rating}"  （恋愛スコア: ${fortuneScores.love.score}/100）
+- health_fortune.rating: "${fortuneScores.health.rating}"  （健康スコア: ${fortuneScores.health.score}/100）
+
 ${question ? `【ご質問・お悩み】\n${question}` : ''}
 
-上記の情報をすべて考慮した上で、指定のJSON形式で${periodKind}の総合的な運勢鑑定を行ってください。
+上記の計算済みレーティングをJSONにそのまま使用し、各レーティングに合った${periodKind}の鑑定文を生成してください。
     `.trim()
 
     const langInstruction: Record<string, string> = {

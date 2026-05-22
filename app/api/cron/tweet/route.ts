@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 - 各順位に絵文字と一言運勢コメント（5文字以内）を付ける
 - 「あなたの組み合わせは何位？」などアプリへ誘導する文を入れる
 - ハッシュタグを2個含める（例: #六星占術 #総合占い）
-- 末尾に「🔮 https://sophie1028.com」を追加すること
+- 末尾に「🔮 https://sophie-uranai.vercel.app」を追加すること
 - 改行を使い読みやすくすること
 
 ツイート例（参考フォーマット・文字数の目安）：
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 5位 水星人+×♒みずがめ座×A型 🌙金運↑
 
 あなたの組み合わせは何位？
-🔮 https://sophie1028.com
+🔮 https://sophie-uranai.vercel.app
 #六星占術 #総合占い
 
 以下のJSON形式で返してください：

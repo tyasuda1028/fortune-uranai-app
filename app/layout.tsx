@@ -4,7 +4,7 @@ import { jaJP } from '@clerk/localizations'
 import { LangProvider } from '@/lib/i18n-context'
 import './globals.css'
 
-const APP_URL = 'https://sophie1028.com'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sophie-uranai.vercel.app'
 const APP_NAME = '運勢占い｜複合占術鑑定'
 const APP_DESCRIPTION =
   '六星占術・西洋占星術・数秘術・バイオリズム・四柱推命・タロット占いを組み合わせた総合運勢鑑定。日運・週運・月運に対応。無料で5回まで利用できます。'

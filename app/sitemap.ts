@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const APP_URL = 'https://sophie1028.com'
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sophie-uranai.vercel.app'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

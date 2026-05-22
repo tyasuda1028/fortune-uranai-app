@@ -115,7 +115,7 @@ export async function createPayPalSubscription(
 ): Promise<{ subscriptionId: string; approvalUrl: string }> {
   const token = await getPayPalToken()
   const planId = await getOrCreatePlanId()
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sophie1028.com'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sophie-uranai.vercel.app'
 
   const res = await fetch(`${PAYPAL_API}/v1/billing/subscriptions`, {
     method: 'POST',
